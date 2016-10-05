@@ -6,9 +6,9 @@
  *
  * File : gmp102.c
  *
- * Date : 2016/08/25
+ * Date : 2016/10/05
  *
- * Revision : 1.0.0
+ * Revision : 1.1.0
  *
  * Usage: GMP102 sensor driver header file
  *
@@ -46,14 +46,14 @@
  
  static const float GMP102_CALIB_SCALE_FACTOR[] = {
                     1.0E+00,
-                    1.0E-03,
-                    1.0E-07,
-                    1.0E-04,
-                    1.0E-08,
-                    1.0E-12,
+                    1.0E-05,
                     1.0E-10,
-                    1.0E-14,
-                    1.0E-18 };
+                    1.0E-05,
+                    1.0E-10,
+                    1.0E-15,
+                    1.0E-12,
+                    1.0E-17,
+                    1.0E-21 };
  
  /*!
  * @brief Read multiple data from the starting regsiter address
