@@ -2,32 +2,35 @@ Quick Porting Guide
 ===================
 Add the following codes for your platform and you are pretty much ready to go.
 
-# sensor_driver_test.c: main program
+sensor_driver_test.c: main program
+----------------------------------
 
- * Add the time delay function
-    `
+* Add the time delay function
+    ```
     #define DELAY_MS(ms)	//.....     /* Add your time delay function here */
-    `
+    ```
 
- * Add HW initialization
-    `
+* Add HW initialization
+    ```
     /* Add your HW initialization code here
     ...
     ...
     ...
     ...
     */
-    `
+    ```
 
-# bus_support.c
- * Add I2C read/write function pointer to your I2C functions
-    `
+bus_support.c
+-------------
+
+* Add I2C read/write function pointer to your I2C functions
+    ```
 	 pbus->bus_read = I2C_read_bytes;    /* Put your I2C read function pointer here */
 	 pbus->bus_write = I2C_write_bytes;  /* Put your I2C write function pointer here */
-    `
+    ```
 
   Your I2C read/write functions should implement the following interface:
-    `
+    ```
     //******************************************************************************
     //
     //! @brief Read multiple bytes from I2C slave with address devAddr
@@ -68,5 +71,5 @@ Add the following codes for your platform and you are pretty much ready to go.
     {
      /* ..... */
     }
-    `
+    ```
    
