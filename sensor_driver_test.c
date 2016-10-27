@@ -6,10 +6,6 @@
  *
  * File : sensor_driver_test.c
  *
- * Date : 2016/08/26
- *
- * Revision : 1.0.0
- *
  * Usage: GMP102 Sensor Driver Test
  *
  ****************************************************************************
@@ -38,6 +34,7 @@
  
 #include <stdio.h>
 #include "gmp102.h"
+#include "pSensor_util.h"
 
 #define DELAY_MS(ms)	//.....     /* Add your time delay function here */
 
@@ -50,7 +47,7 @@ int main(void)
 
 	s8 s8Res; 
 	bus_support_t gmp102_bus;
-	float fCalibParam[GMP102_CALIBRATION_PARAMETER_COUNT], fT_Celsius, fP_Pa;
+	float fCalibParam[GMP102_CALIBRATION_PARAMETER_COUNT], fT_Celsius, fP_Pa, fAlt_m;
 	s16 s16T;
 	s32 s32P;
 
@@ -76,6 +73,10 @@ int main(void)
 	
 	/* GMP102 initialization setup */
 	s8Res = gmp102_initialization();
+
+	/* set sea level reference pressure */
+	//If not set, use default 101325 Pa for pressure altitude calculation
+	set_sea_level_pressure_base(102100.f);
 	
   for(;;)
   {
@@ -91,6 +92,10 @@ int main(void)
 		gmp102_compensation(s16T, s32P, fCalibParam, &fT_Celsius, &fP_Pa);
 		printf("P(Pa)=%f\r", fP_Pa);
 		printf("T(C)=%f\r", fT_Celsius);
+
+		/* Pressure Altitude */
+		fAlt_m = pressure2Alt(fP_Pa);
+		printf("Alt(m)=%f\r", fAlt_m);
 
 		/* Delay 1 sec */
 		DELAY_MS(1000);
