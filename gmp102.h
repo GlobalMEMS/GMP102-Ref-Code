@@ -6,9 +6,7 @@
  *
  * File : gmp102.h
  *
- * Date : 2016/08/25
- *
- * Revision : 1.0.0
+ * Date : 2016/09/21
  *
  * Usage: Sensor Driver file for GMP102 sensor
  *
@@ -47,17 +45,18 @@
 
 //Registers Address
 #define GMP102_REG_RESET	  0x00
-#define GMP102_REG_PID 	    0x01
-#define GMP102_REG_STATUS 	0x02
-#define GMP102_REG_PRESSH	 	0x06
-#define GMP102_REG_PRESSM	 	0x07
-#define GMP102_REG_PRESSL	 	0x08
-#define GMP102_REG_TEMPH	 	0x09
-#define GMP102_REG_TEMPL	 	0x0A
+#define GMP102_REG_PID 	          0x01
+#define GMP102_REG_STATUS 	  0x02
+#define GMP102_REG_PRESSH	  0x06
+#define GMP102_REG_PRESSM	  0x07
+#define GMP102_REG_PRESSL	  0x08
+#define GMP102_REG_TEMPH	  0x09
+#define GMP102_REG_TEMPL	  0x0A
 #define GMP102_REG_CMD	 	  0x30
-#define GMP102_REG_CONFIG1 	0xA5
-#define GMP102_REG_CONFIG2 	0xA6
-#define GMP102_REG_CALIB00  0xAA
+#define GMP102_REG_CONFIG1 	  0xA5
+#define GMP102_REG_CONFIG2 	  0xA6
+#define GMP102_REG_CONFIG3 	  0xA7
+#define GMP102_REG_CALIB00        0xAA
 //Total calibration register count: AAh~BBh total 18
 #define GMP102_CALIBRATION_REGISTER_COUNT 18
 //Total calibration parameter count: total 9
@@ -73,33 +72,47 @@
 #define GMP102_RST__MSK		0x24
 #define GMP102_RST__POS		0
 /* DRDY bit */
-#define GMP102_DRDY__REG		GMP102_REG_STATUS
-#define GMP102_DRDY__MSK		0x01
-#define GMP102_DRDY__POS		0
+#define GMP102_DRDY__REG	GMP102_REG_STATUS
+#define GMP102_DRDY__MSK	0x01
+#define GMP102_DRDY__POS	0
 /* P OSR bits */
-#define GMP102_P_OSR__REG   GMP102_REG_CONFIG2
-#define GMP102_P_OSR__MSK   0x07
-#define GMP102_P_OSR__POS   0
+#define GMP102_P_OSR__REG       GMP102_REG_CONFIG2
+#define GMP102_P_OSR__MSK       0x07
+#define GMP102_P_OSR__POS       0
+/* T OSR bits */
+#define GMP102_T_OSR__REG       GMP102_REG_CONFIG3
+#define GMP102_T_OSR__MSK       0x07
+#define GMP102_T_OSR__POS       0
 
+#define GMP102_GET_BITSLICE(regvar, bitname)	\
+  ((regvar & bitname##__MSK) >> bitname##__POS)
 
-#define GMP102_GET_BITSLICE(regvar, bitname)\
-((regvar & bitname##__MSK) >> bitname##__POS)
-
-#define GMP102_SET_BITSLICE(regvar, bitname, val)\
-((regvar & ~bitname##__MSK) | ((val<<bitname##__POS)&bitname##__MSK))
+#define GMP102_SET_BITSLICE(regvar, bitname, val)			\
+  ((regvar & ~bitname##__MSK) | ((val<<bitname##__POS)&bitname##__MSK))
 
 typedef enum {
-	GMP102_P_OSR_256 = 0x04,
-	GMP102_P_OSR_512 = 0x05,
-	GMP102_P_OSR_1024 = 0x00,
-	GMP102_P_OSR_2048 = 0x01,
-	GMP102_P_OSR_4096 = 0x02,
-	GMP102_P_OSR_8192 = 0x03,
-	GMP102_P_OSR_16384 = 0x06,
-	GMP102_P_OSR_32768 = 0x07,	
+  GMP102_P_OSR_256 = 0x04,
+  GMP102_P_OSR_512 = 0x05,
+  GMP102_P_OSR_1024 = 0x00,
+  GMP102_P_OSR_2048 = 0x01,
+  GMP102_P_OSR_4096 = 0x02,
+  GMP102_P_OSR_8192 = 0x03,
+  GMP102_P_OSR_16384 = 0x06,
+  GMP102_P_OSR_32768 = 0x07,	
 } GMP102_P_OSR_Type;
 
- /*!
+typedef enum {
+  GMP102_T_OSR_256 = 0x04,
+  GMP102_T_OSR_512 = 0x05,
+  GMP102_T_OSR_1024 = 0x00,
+  GMP102_T_OSR_2048 = 0x01,
+  GMP102_T_OSR_4096 = 0x02,
+  GMP102_T_OSR_8192 = 0x03,
+  GMP102_T_OSR_16384 = 0x06,
+  GMP102_T_OSR_32768 = 0x07,	
+} GMP102_T_OSR_Type;
+
+/*!
  * @brief Read multiple data from the starting regsiter address
  *
  * @param u8Addr Starting register address
@@ -209,6 +222,21 @@ s8 gmp102_measure_T(s16* ps16T);
  */
 s8 gmp102_measure_P(s32* ps32P);
 
+/*!
+ * @brief gmp102 measure pressure and temperature
+ *        Read pressure first then commit pressure data conversion for the next call
+ *        
+ * @param *ps32P raw pressure in code returned to caller
+ * @param *ps16T calibrated temperature code returned to caller
+ * @param s8WaitPDrdy 1: P wait for DRDY bit set, 0: P no wait
+ *
+ * 
+ * @return Result from bus communication function
+ * @retval -1 Bus communication error
+ * @retval -127 Error null bus
+ *
+ */
+s8 gmp102_measure_P_T(s32* ps32P, s16* ps16T, s8 s8PWaitDrdy);
 
 /*!
  * @brief gmp102 temperature and pressure compensation
@@ -236,5 +264,16 @@ void gmp102_compensation(s16 s16T, s32 s32P, float fParam[], float* pfT_Celsius,
  */
 s8 gmp102_set_P_OSR(GMP102_P_OSR_Type osrP);
 
+/*!
+ * @brief gmp102 set temperature OSR
+ *
+ * @param osrT OSR to set
+ * 
+ * @return Result from bus communication function
+ * @retval -1 Bus communication error
+ * @retval -127 Error null bus
+ *
+ */
+s8 gmp102_set_T_OSR(GMP102_T_OSR_Type osrT);
 
 #endif // __GMP102_H__
