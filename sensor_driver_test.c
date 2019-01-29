@@ -51,7 +51,7 @@ int main(void)
 	s16 s16Value[GMP102_CALIBRATION_PARAMETER_COUNT];
 	u8 u8Power[GMP102_CALIBRATION_PARAMETER_COUNT];
 	s16 s16T;
-	s32 s32P, s32P_Pa, s32T_Celsius;
+	s32 s32P, s32P64_Pa, s32P32_Pa, s32T_Celsius;
 
 	/* Add your HW initialization code here
 	...
@@ -91,10 +91,11 @@ int main(void)
 		s8Res = gmp102_measure_T(&s16T);
 		printf("T(code)=%d\r", s16T);
 		
-		/* Compensation */
+		/* Compensation, choose one of the three below in actual implementation*/
 		gmp102_compensation(s16T, s32P, fCalibParam, &fT_Celsius, &fP_Pa);
-		gmp102_compensation_fixed_point_s64(s16T, s32P, s16Value, u8Power, &s32T_Celsius, &s32P_Pa);
-		printf("P(Pa)=%f, %d\r", fP_Pa, s32P_Pa);
+		gmp102_compensation_fixed_point_s64(s16T, s32P, s16Value, u8Power, &s32T_Celsius, &s32P64_Pa);
+		gmp102_compensation_fixed_point_s32(s16T, s32P, s16Value, u8Power, &s32T_Celsius, &s32P32_Pa);
+		printf("P(Pa)=%f, %d, %d\r", fP_Pa, s32P64_Pa, s32P32_Pa);
 		printf("T(C)=%f, %f\r", fT_Celsius, s32T_Celsius/256.0);
 
 		/* Pressure Altitude */
