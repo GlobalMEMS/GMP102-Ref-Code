@@ -235,17 +235,17 @@ s8 gmp102_initialization(void){
 /*!
  * @brief gmp102 T-Forced mode measure temperature
  *
- * @param *ps16T raw temperature code returned to caller
+ * @param *ps32T raw temperature code returned to caller
  *
  * @return Result from bus communication function
  * @retval -1 Bus communication error
  * @retval -127 Error null bus
  *
  */
-s8 gmp102_measure_T(s16* ps16T){
+s8 gmp102_measure_T(s32* ps32T){
 
   s8 comRslt = 0, s8Tmp;
-  u8 u8Data[2];
+  u8 u8Data[3];
 
   // Set 30h = 0x08, T-Forced mode
   u8Data[0] = GMP102_T_FORCED_MODE_SET_VALUE;
@@ -273,8 +273,8 @@ s8 gmp102_measure_T(s16* ps16T){
 
   } while( GMP102_GET_BITSLICE(u8Data[0], GMP102_DRDY) != 1);
 
-  // Read 09h~0Ah
-  s8Tmp = gmp102_burst_read(GMP102_REG_TEMPH, u8Data, 2);
+  // Read 06h~08h
+  s8Tmp = gmp102_burst_read(GMP102_REG_PRESSH, u8Data, 3);
 
   if(s8Tmp < 0){ //communication error
     comRslt = s8Tmp;
@@ -282,8 +282,10 @@ s8 gmp102_measure_T(s16* ps16T){
   }
   comRslt += s8Tmp;
 
+  s8Tmp = sizeof(*ps32T)*8 - 24;
   // Get the raw temperature in code
-  *ps16T = (u8Data[0] << 8) + u8Data[1];
+  *ps32T = (u8Data[0] << 16) + (u8Data[1] << 8) + u8Data[2];
+  *ps32T = (*ps32T << s8Tmp) >> s8Tmp; //24 bit sign extension
 
  EXIT:
   return comRslt;
@@ -371,123 +373,6 @@ void gmp102_compensation(s16 s16T, s32 s32P, float fParam[], float* pfP_Pa){
     fParam[6]*s32P*s32P + \
     fParam[7]*s16T*s32P*s32P + \
     fParam[8]*s16T*s16T*s32P*s32P;
-
-}
-
-/*!
- * @brief gmp102 read raw pressure and temperature
- *        This function just read data registers, thus should
- *        be called when GMP102 is in the continuous mode that
- *        data conversion is periodically conducted.
- *
- * @param *ps32P raw pressure in code returned to caller
- * @param *ps16T raw temperature code returned to caller
- *
- *
- * @return Result from bus communication function
- * @retval -1 Bus communication error
- * @retval -127 Error null bus
- *
- */
-s8 gmp102_read_P_T(s32* ps32P, s16* ps16T){
-
-  s8 comRslt = 0, s8Tmp;
-  u8 u8Data[5];
-
-  // Read data registers 06h~0Ah
-  s8Tmp = gmp102_burst_read(GMP102_REG_PRESSH, u8Data, 5);
-
-  if(s8Tmp < 0){ //communication error
-    comRslt = s8Tmp;
-    goto EXIT;
-  }
-  comRslt += s8Tmp;
-
-  s8Tmp = sizeof(*ps32P)*8 - 24;
-  // Get the raw pressure in code
-  *ps32P = (u8Data[0] << 16) + (u8Data[1] << 8) + u8Data[2];
-  *ps32P = (*ps32P << s8Tmp) >> s8Tmp; //24 bit sign extension
-
-  // Get the raw temperature in code
-  *ps16T = (u8Data[3] << 8) + u8Data[4];
-
- EXIT:
-  return comRslt;
-}
-
-/*!
- * @brief gmp102 set to continuous mode
- *
- * @return Result from bus communication function
- * @retval -1 Bus communication error
- * @retval -127 Error null bus
- *
- */
-s8 gmp102_set_continuous_mode(){
-
-  s8 comRslt = 0, s8Tmp;
-  u8 u8Data;
-
-  //Read 30h
-  s8Tmp = gmp102_burst_read(GMP102_REG_CMD, &u8Data, 1);
-
-  if(s8Tmp < 0){ //communication error
-    comRslt = s8Tmp;
-    goto EXIT;
-  }
-  comRslt += s8Tmp;
-
-  //Set the 30h[3:0] Measure_CTRL bits
-  u8Data = GMP102_SET_BITSLICE(u8Data, GMP102_MEAS_CTRL, GMP102_CONT_MODE_SET_VALUE);
-  s8Tmp = gmp102_burst_write(GMP102_REG_CMD, &u8Data, 1);
-
-  if(s8Tmp < 0){ //communication error
-    comRslt = s8Tmp;
-    goto EXIT;
-  }
-  comRslt += s8Tmp;
-
- EXIT:
-  return comRslt;
-
-}
-
-/*!
- * @brief gmp102 set standby-time for continuous mode
- *
- * @param stbyTime standby time to set
- *
- * @return Result from bus communication function
- * @retval -1 Bus communication error
- * @retval -127 Error null bus
- *
- */
-s8 gmp102_set_standby_time(GMP102_STANDBY_TIME_Type stbyTime){
-
-  s8 comRslt = 0, s8Tmp;
-  u8 u8Data;
-
-  //Read 30h
-  s8Tmp = gmp102_burst_read(GMP102_REG_CMD, &u8Data, 1);
-
-  if(s8Tmp < 0){ //communication error
-    comRslt = s8Tmp;
-    goto EXIT;
-  }
-  comRslt += s8Tmp;
-
-  //Set the 30h[7:4] Standby_Time bits
-  u8Data = GMP102_SET_BITSLICE(u8Data, GMP102_STANDBY_TIME, stbyTime);
-  s8Tmp = gmp102_burst_write(GMP102_REG_CMD, &u8Data, 1);
-
-  if(s8Tmp < 0){ //communication error
-    comRslt = s8Tmp;
-    goto EXIT;
-  }
-  comRslt += s8Tmp;
-
- EXIT:
-  return comRslt;
 
 }
 

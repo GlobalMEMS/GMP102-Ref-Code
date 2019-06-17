@@ -50,8 +50,7 @@ int main(void)
   float fCalibParam[GMP102_CALIBRATION_PARAMETER_COUNT], fP_Pa, fAlt_m;
   s16 s16Value[GMP102_CALIBRATION_PARAMETER_COUNT];
   u8 u8Power[GMP102_CALIBRATION_PARAMETER_COUNT];
-  s16 s16T;
-  s32 s32P;
+  s32 s32T, s32P;
 
   /* Add your HW initialization code here
      ...
@@ -93,11 +92,11 @@ int main(void)
       printf("P(code)=%d\r", s32P);
 
       /* Mesaure T by T-forced mode*/
-      s8Res = gmp102_measure_T(&s16T);
-      printf("T(code)=%d\r", s16T);
+      s8Res = gmp102_measure_T(&s32T);
+      printf("T(code)=%d\r", s32T);
 
       /* P Compensation */
-      gmp102_compensation(s16T, s32P, fCalibParam, &fP_Pa);
+      gmp102_compensation(s32T, s32P, fCalibParam, &fP_Pa);
       printf("P(Pa)=%f\r", fP_Pa);
 
       /* Pressure Altitude */

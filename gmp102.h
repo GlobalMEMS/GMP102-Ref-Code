@@ -236,14 +236,14 @@ s8 gmp102_initialization(void);
 /*!
  * @brief gmp102 T-Forced mode measure temperature
  *
- * @param *ps16T raw temperature code returned to caller
+ * @param *ps32T raw temperature code returned to caller
  *
  * @return Result from bus communication function
  * @retval -1 Bus communication error
  * @retval -127 Error null bus
  *
  */
-s8 gmp102_measure_T(s16* ps16T);
+s8 gmp102_measure_T(s32* ps32T);
 
 /*!
  * @brief gmp102 P-Forced mode measure pressure
@@ -269,45 +269,6 @@ s8 gmp102_measure_P(s32* ps32P);
  *
  */
 void gmp102_compensation(s16 s16T, s32 s32P, float fParam[], float* pfP_Pa);
-
-/*!
- * @brief gmp102 read raw pressure and temperature
- *        This function just read data registers, thus should
- *        be called when GMP102 is in the continuous mode that
- *        data conversion is periodically conducted.
- *
- * @param *ps32P raw pressure in code returned to caller
- * @param *ps16T raw temperature code returned to caller
- *
- *
- * @return Result from bus communication function
- * @retval -1 Bus communication error
- * @retval -127 Error null bus
- *
- */
-s8 gmp102_read_P_T(s32* ps32P, s16* ps16T);
-
-/*!
- * @brief gmp102 set to continuous mode
- *
- * @return Result from bus communication function
- * @retval -1 Bus communication error
- * @retval -127 Error null bus
- *
- */
-s8 gmp102_set_continuous_mode();
-
-/*!
- * @brief gmp102 set standby-time for continuous mode
- *
- * @param stbyTime standby time to set
- *
- * @return Result from bus communication function
- * @retval -1 Bus communication error
- * @retval -127 Error null bus
- *
- */
-s8 gmp102_set_standby_time(GMP102_STANDBY_TIME_Type stbyTime);
 
 /*!
  * @brief gmp102 set raw/calibrated data
