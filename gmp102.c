@@ -491,3 +491,131 @@ s8 gmp102_set_T_OSR(GMP102_T_OSR_Type osrT){
  EXIT:
   return comRslt;
 }
+
+/*!
+ * @brief gmp102 select T sensor: external or internal
+ *
+ * @param sensorT T-sensor to select
+ *
+ * @return Result from bus communication function
+ * @retval -1 Bus communication error
+ * @retval -127 Error null bus
+ *
+ */
+s8 gmp102_select_T_sensor(GMP102_T_Sensor_Select_Type sensorT){
+
+  s8 comRslt = 0, s8Tmp;
+  u8 u8Data;
+
+  //Read A7h
+  s8Tmp = gmp102_burst_read(GMP102_REG_CONFIG3, &u8Data, 1);
+
+  if(s8Tmp < 0){ //communication error
+    comRslt = s8Tmp;
+    goto EXIT;
+  }
+  comRslt += s8Tmp;
+
+  //Set the A7h[7:6] Temp_Sel bits
+  u8Data = GMP102_SET_BITSLICE(u8Data, GMP102_Temp_Sel, sensorT);
+  s8Tmp = gmp102_burst_write(GMP102_REG_CONFIG3, &u8Data, 1);
+
+  if(s8Tmp < 0){ //communication error
+    comRslt = s8Tmp;
+    goto EXIT;
+  }
+  comRslt += s8Tmp;
+
+ EXIT:
+  return comRslt;
+}
+
+/*!
+ * @brief gmp102 T-Forced mode measure calibrated temperature
+ *
+ * @param *ps16T calibrated temperature code returned to caller
+ *               1 code = 1/256 Celsius
+ *
+ * @return Result from bus communication function
+ * @retval -1 Bus communication error
+ * @retval -127 Error null bus
+ *
+ */
+s8 gmp102_measure_T_Calibrated(s16* ps16T){
+
+  s8 comRslt = 0, s8Tmp;
+  u8 u8Data[2];
+
+  // Set to internal temperature sensor
+  s8Tmp = gmp102_select_T_sensor(GMP102_INTERNAL_T_SENSOR);
+  if(s8Tmp < 0){ //communication error
+    comRslt = s8Tmp;
+    goto EXIT;
+  }
+  comRslt += s8Tmp;
+
+  // Set to calibration data out
+  s8Tmp = gmp102_set_raw_data(0);
+  if(s8Tmp < 0){ //communication error
+    comRslt = s8Tmp;
+    goto EXIT;
+  }
+  comRslt += s8Tmp;
+
+  // Set 30h = 0x08, T-Forced mode
+  u8Data[0] = GMP102_T_FORCED_MODE_SET_VALUE;
+  s8Tmp = gmp102_burst_write(GMP102_REG_CMD, u8Data, 1);
+
+  if(s8Tmp < 0){ //communication error
+    comRslt = s8Tmp;
+    goto EXIT;
+  }
+  comRslt += s8Tmp;
+
+  // Wait for 02h[0] DRDY bit set
+  do{
+
+    //wait a while
+    WAIT_FOR_DRDY_LOOP_DELAY(1000)
+
+      s8Tmp = gmp102_burst_read(GMP102_REG_STATUS, u8Data, 1);
+
+    if(s8Tmp < 0){ //communication error
+      comRslt = s8Tmp;
+      goto EXIT;
+    }
+    comRslt += s8Tmp;
+
+  } while( GMP102_GET_BITSLICE(u8Data[0], GMP102_DRDY) != 1);
+
+  // Read 09h~0Ah
+  s8Tmp = gmp102_burst_read(GMP102_REG_TEMPH, u8Data, 2);
+
+  if(s8Tmp < 0){ //communication error
+    comRslt = s8Tmp;
+    goto EXIT;
+  }
+  comRslt += s8Tmp;
+
+  // Get the calibrated temperature in code
+  *ps16T = (u8Data[0] << 8) + u8Data[1];
+
+  // Restore to external temperature sensor
+  s8Tmp = gmp102_select_T_sensor(GMP102_EXTERNAL_T_SENSOR);
+  if(s8Tmp < 0){ //communication error
+    comRslt = s8Tmp;
+    goto EXIT;
+  }
+  comRslt += s8Tmp;
+
+  // Restore to raw data out
+  s8Tmp = gmp102_set_raw_data(1);
+  if(s8Tmp < 0){ //communication error
+    comRslt = s8Tmp;
+    goto EXIT;
+  }
+  comRslt += s8Tmp;
+
+ EXIT:
+  return comRslt;
+}

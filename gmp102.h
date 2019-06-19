@@ -100,6 +100,10 @@
 #define GMP102_T_OSR__REG       GMP102_REG_CONFIG3
 #define GMP102_T_OSR__MSK       0x07
 #define GMP102_T_OSR__POS       0
+/* Temp_Sel bits */
+#define GMP102_Temp_Sel__REG     GMP102_REG_CONFIG3
+#define GMP102_Temp_Sel__MSK     0xC0
+#define GMP102_Temp_Sel__POS     6
 
 #define GMP102_GET_BITSLICE(regvar, bitname)	\
   ((regvar & bitname##__MSK) >> bitname##__POS)
@@ -130,23 +134,9 @@ typedef enum {
 } GMP102_T_OSR_Type;
 
 typedef enum {
-  GMP102_STANDBY_TIME_0ms = 0,
-  GMP102_STANDBY_TIME_63ms = 1,
-  GMP102_STANDBY_TIME_125ms = 2,
-  GMP102_STANDBY_TIME_188ms = 3,
-  GMP102_STANDBY_TIME_250ms = 4,
-  GMP102_STANDBY_TIME_313ms = 5,
-  GMP102_STANDBY_TIME_375ms = 6,
-  GMP102_STANDBY_TIME_438ms = 7,
-  GMP102_STANDBY_TIME_500ms = 8,
-  GMP102_STANDBY_TIME_563ms = 9,
-  GMP102_STANDBY_TIME_625ms = 10,
-  GMP102_STANDBY_TIME_688ms = 11,
-  GMP102_STANDBY_TIME_750ms = 12,
-  GMP102_STANDBY_TIME_813ms = 13,
-  GMP102_STANDBY_TIME_875ms = 14,
-  GMP102_STANDBY_TIME_938ms = 15,
-} GMP102_STANDBY_TIME_Type;
+  GMP102_EXTERNAL_T_SENSOR = 0x00,
+  GMP102_INTERNAL_T_SENSOR = 0x11,
+} GMP102_T_Sensor_Select_Type;
 
 /*!
  * @brief Read multiple data from the starting regsiter address
@@ -305,5 +295,30 @@ s8 gmp102_set_P_OSR(GMP102_P_OSR_Type osrP);
  *
  */
 s8 gmp102_set_T_OSR(GMP102_T_OSR_Type osrT);
+
+/*!
+ * @brief gmp102 select T sensor: external or internal
+ *
+ * @param sensorT T-sensor to select
+ *
+ * @return Result from bus communication function
+ * @retval -1 Bus communication error
+ * @retval -127 Error null bus
+ *
+ */
+s8 gmp102_select_T_sensor(GMP102_T_Sensor_Select_Type sensorT);
+
+/*!
+ * @brief gmp102 T-Forced mode measure calibrated temperature
+ *
+ * @param *ps16T calibrated temperature code returned to caller
+ *               1 code = 1/256 Celsius
+ *
+ * @return Result from bus communication function
+ * @retval -1 Bus communication error
+ * @retval -127 Error null bus
+ *
+ */
+s8 gmp102_measure_T_Calibrated(s16* ps16T);
 
 #endif // __GMP102_H__
